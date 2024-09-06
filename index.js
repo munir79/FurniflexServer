@@ -1,5 +1,5 @@
 const express = require('express');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors=require('cors');
 const app = express();
 const port = process.env.PORT ||5000;
@@ -36,6 +36,30 @@ async function run() {
 
     const database = client.db("Furniflex");
     const ChairCollection = database.collection("allcahir");
+    const CartCollection = database.collection("carts");
+
+
+    app.post('/carts',async(req,res)=>{
+        const Carts=req.body;
+        const result= await CartCollection.insertOne(Carts);
+        res.send(result);
+      })
+    
+
+      app.get('/carts',async(req,res)=>{
+        const email=req.query.email;
+        const query={email:email};
+        const result= await CartCollection.find(query).toArray();
+        res.send(result);
+      })
+  
+      app.delete('/carts/:id',async(req,res)=>{
+        const id=req.params.id;
+        const query={_id:new ObjectId(id)};
+        const result= await CartCollection.deleteOne(query);
+        res.send(result);
+      })
+
 
     app.get('/chair',async(req,res)=>{
         const cursor=ChairCollection.find();
@@ -43,6 +67,9 @@ async function run() {
         res.send(result);
       })
   
+     
+  
+
 
     
     // Send a ping to confirm a successful connection
