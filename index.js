@@ -62,13 +62,39 @@ async function run() {
 
 
     app.get('/chair',async(req,res)=>{
-        const cursor=ChairCollection.find();
-        const result=await cursor.toArray();
+      const page=parseInt(req.query.page);
+      const size=parseInt(req.query.size);
+      console.log("pagination Query:", page,size);
+        const result= await ChairCollection.find()
+        .skip(page*size)
+        .limit(size)
+        .toArray();
+        
         res.send(result);
       })
   
      
   
+
+      //pagination
+
+      app.get('/chair', async (req, res) => {
+        const page = parseInt(req.query.page) || 1; // Default to page 1
+        const limit = parseInt(req.query.limit) || 10; // Default to 10 items per page
+        const skip = (page - 1) * limit;
+    
+        const cursor = ChairCollection.find().skip(skip).limit(limit);
+        const result = await cursor.toArray();
+    
+        const totalChairs = await ChairCollection.countDocuments(); // Get the total count of chairs
+    
+        res.send({
+            chairs: result,
+            totalChairs: totalChairs,
+            currentPage: page,
+            totalPages: Math.ceil(totalChairs / limit)
+        });
+    });
 
 
     
@@ -81,16 +107,6 @@ async function run() {
   }
 }
 run().catch(console.dir);
-
-
-
-
-
-
-
-
-
-
 
 app.get('/',(req,res)=>{
     res.send(" simple crud is running");
