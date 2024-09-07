@@ -2,6 +2,8 @@ const express = require('express');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors=require('cors');
 const app = express();
+
+const stripe = require("stripe")('sk_test_51PNufw2KHGlFTrJGaslRJeHI8QXuQG6drZHmHa3bf7lCOTyxFKTJboRH4ghOPulBboFXN8ppKnmujCMeeZLpHJZx00OK0i4Xkv');
 const port = process.env.PORT ||5000;
 
 
@@ -37,6 +39,7 @@ async function run() {
     const database = client.db("Furniflex");
     const ChairCollection = database.collection("allcahir");
     const CartCollection = database.collection("carts");
+    const PaymentCollection = database.collection("payments");
 
 
     app.post('/carts',async(req,res)=>{
@@ -97,6 +100,37 @@ async function run() {
     });
 
 
+    
+    app.post('/payment-intent', async(req, res) => {
+      const { off_price } = req.body; 
+      const amount = parseInt(off_price * 100); // Use off_price here
+   
+      try {
+          const paymentIntent = await stripe.paymentIntents.create({
+              amount: amount,
+              currency: "usd",
+              payment_method_types: ['card']
+          });
+   
+          res.send({
+              clientSecret: paymentIntent.client_secret,
+          });
+      } catch (error) {
+          console.error("Error creating payment intent:", error);
+          res.status(500).send({ error: "Failed to create payment intent" });
+      }
+   });
+   
+
+    app.post('/payments',async(req,res)=>{
+      const payment=req.body;
+      const paymentResult=await PaymentCollection.insertOne(payment);
+      const query={_id : {
+        $in:payment.cartIds.map(id=>new ObjectId(id))
+      }}
+      const deleteResult=await CartCollection.deleteMany(query);
+      res.send({paymentResult,deleteResult});
+    })
     
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
