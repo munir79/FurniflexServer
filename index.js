@@ -34,7 +34,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    //await client.connect();
 
     const database = client.db("Furniflex");
     const ChairCollection = database.collection("allcahir");
@@ -101,40 +101,11 @@ async function run() {
 
 
     
-    app.post('/payment-intent', async(req, res) => {
-      const { off_price } = req.body; 
-      const amount = parseInt(off_price * 100); // Use off_price here
-   
-      try {
-          const paymentIntent = await stripe.paymentIntents.create({
-              amount: amount,
-              currency: "usd",
-              payment_method_types: ['card']
-          });
-   
-          res.send({
-              clientSecret: paymentIntent.client_secret,
-          });
-      } catch (error) {
-          console.error("Error creating payment intent:", error);
-          res.status(500).send({ error: "Failed to create payment intent" });
-      }
-   });
-   
-
-    app.post('/payments',async(req,res)=>{
-      const payment=req.body;
-      const paymentResult=await PaymentCollection.insertOne(payment);
-      const query={_id : {
-        $in:payment.cartIds.map(id=>new ObjectId(id))
-      }}
-      const deleteResult=await CartCollection.deleteMany(query);
-      res.send({paymentResult,deleteResult});
-    })
+  
     
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    // await client.db("admin").command({ ping: 1 });
+    // console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
    // await client.close();
